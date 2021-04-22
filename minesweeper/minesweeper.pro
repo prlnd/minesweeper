@@ -9,18 +9,26 @@ CONFIG += c++11
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
-    game.cpp \
+    cell.cpp \
+    customlcd.cpp \
+    field.cpp \
     lcdtimer.cpp \
     main.cpp \
     mainwindow.cpp
 
 HEADERS += \
-    constants.h \
-    game.h \
+    cell.h \
+    customlcd.h \
+    difficulty.h \
+    field.h \
     lcdtimer.h \
-    mainwindow.h
+    mainwindow.h \
+    status.h
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
+
+RESOURCES += \
+    Resources.qrc

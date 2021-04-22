@@ -1,10 +1,11 @@
 #ifndef LCDTIMER_H
 #define LCDTIMER_H
 
-#include <QLCDNumber>
+#include "customlcd.h"
+
 #include <QTimer>
 
-class LCDTimer : public QLCDNumber
+class LCDTimer : public CustomLCD
 {
     Q_OBJECT
 

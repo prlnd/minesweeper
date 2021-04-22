@@ -2,6 +2,8 @@
 #define MAINWINDOW_H
 
 #include "lcdtimer.h"
+//#include "grid.h"
+#include "field.h"
 
 #include <QGridLayout>
 #include <QMainWindow>
@@ -17,28 +19,46 @@ public:
     ~MainWindow();
 
 public slots:
-    void clear();
+    void reset();
 
 private:
     QWidget *m_centralWidget;
     QVBoxLayout *m_vLayout;
     QHBoxLayout *m_headerLayout;
-    QGridLayout *m_gridLayout;
-    QLCDNumber *m_mineCounter;
+    Field *m_grid;
+    CustomLCD *m_mineCounter;
     LCDTimer *m_timeCounter;
     QPushButton *m_faceButton;
+    QIcon iconContinues;
+    QIcon iconWon;
+    QIcon iconLost;
 
     void initializeWidgets();
-    void resetWidgets();
     void initializeLayouts();
     void addWidgetsToLayouts();
-    void createGrid();
-    void initializeSquare(QPushButton *square);
-    void resetSquare(QPushButton *square);
     void initalizeCentralWidget();
+
+    inline static constexpr auto WIDTH {32};
+    inline static constexpr auto HEIGHT {32};
+    inline static constexpr auto FACE_STYLE {
+        "background-color: silver;"
+        "border: 2px outset #999;"
+        "color: yellow;"
+        "font: arial;"
+        "font-size: 20px;"
+        "font-weight: bold;"
+    };
+
+    inline static constexpr auto CENTRAL_STYLE {
+        "background-color: silver;"
+    };
 
 private slots:
     void buttonPressed();
+    void flagged(bool isFlagged);
+    void finish();
+    void win();
+    void lose();
 };
 
 #endif // MAINWINDOW_H

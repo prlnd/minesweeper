@@ -1,5 +1,4 @@
 #include "mainwindow.h"
-#include "constants.h"
 
 #include <QDebug>
 
@@ -8,72 +7,71 @@ MainWindow::MainWindow(QWidget *parent)
     , m_centralWidget(new QWidget)
     , m_vLayout(new QVBoxLayout)
     , m_headerLayout(new QHBoxLayout)
-    , m_gridLayout(new QGridLayout)
-    , m_mineCounter(new QLCDNumber)
+    , m_grid(new Field)
+    , m_mineCounter(new CustomLCD)
     , m_timeCounter(new LCDTimer)
-    , m_faceButton(new QPushButton(":)"))
+    , m_faceButton(new QPushButton)
+    , iconContinues(QPixmap(":/images/Smiley1.ico"))
+    , iconWon(QPixmap(":/images/Smiley.ico"))
+    , iconLost(QPixmap(":/images/Smiley3.ico"))
 {
     initializeWidgets();
     initializeLayouts();
     addWidgetsToLayouts();
-    createGrid();
     initalizeCentralWidget();
     setCentralWidget(m_centralWidget);
     resize(0, 0);
+    connect(m_grid, &Field::over, this, &MainWindow::finish);
+    connect(m_grid, &Field::won, this, &MainWindow::win);
+    connect(m_grid, &Field::lost, this, &MainWindow::lose);
 }
 
 MainWindow::~MainWindow()
 {
 }
 
-void MainWindow::clear()
+void MainWindow::reset()
 {
-    int n {m_gridLayout->count()};
-    for (int i {0}; i < n; ++i) {
-        auto item = m_gridLayout->itemAt(i)->widget();
-        if (item) {
-            auto square = qobject_cast<QPushButton*>(item);
-            resetSquare(square);
-        }
-    }
-    resetWidgets();
+    // Grid
+    m_vLayout->removeItem(m_vLayout->itemAt(1));
+    m_grid->deleteLater();
+    m_grid = new Field;
+    m_vLayout->addLayout(m_grid);
+    connect(m_grid, &Field::clicked, this, &MainWindow::buttonPressed);
+    connect(m_grid, &Field::flagged, this, &MainWindow::flagged);
+    connect(m_grid, &Field::over, this, &MainWindow::finish);
+
+    // Counters
+    m_mineCounter->setDigitCount(3);
+    m_mineCounter->display(QString("%1").arg(m_grid->mines, 3, 10, QLatin1Char('0'))); // TODO
+    m_timeCounter->clearTimer();
+
+    // Face
+    m_faceButton->setIcon(iconContinues);
+    connect(m_grid, &Field::won, this, &MainWindow::win);
+    connect(m_grid, &Field::lost, this, &MainWindow::lose);
 }
 
 void MainWindow::initializeWidgets()
 {
     // Counters
-    m_mineCounter->setStyleSheet(Counter::STYLE);
-    m_timeCounter->setStyleSheet(Counter::STYLE);
-    m_mineCounter->setPalette(Qt::red);
-    m_timeCounter->setPalette(Qt::red);
-    m_mineCounter->setSegmentStyle(QLCDNumber::Flat);
-    m_timeCounter->setSegmentStyle(QLCDNumber::Flat);
-    m_mineCounter->setMinimumSize(Counter::WIDTH, Counter::HEIGHT);
-    m_timeCounter->setMinimumSize(Counter::WIDTH, Counter::HEIGHT);
-    m_mineCounter->setMaximumSize(Counter::WIDTH, Counter::HEIGHT);
-    m_timeCounter->setMaximumSize(Counter::WIDTH, Counter::HEIGHT);
 
     // Face button
-    m_faceButton->setMinimumSize(Face::WIDTH, Face::HEIGHT);
-    m_faceButton->setMaximumSize(Face::WIDTH, Face::HEIGHT);
-    m_faceButton->setStyleSheet(Face::STYLE);
-    connect(m_faceButton, &QPushButton::clicked, this, &MainWindow::clear);
-
-    resetWidgets();
-}
-
-void MainWindow::resetWidgets()
-{
-    // Counters
+    m_faceButton->setIcon(iconContinues);
+    m_faceButton->setMinimumSize(WIDTH, HEIGHT);
+    m_faceButton->setMaximumSize(WIDTH, HEIGHT);
+    m_faceButton->setStyleSheet(FACE_STYLE);
     m_mineCounter->setDigitCount(3);
-    m_mineCounter->display("099"); // TODO
+    m_mineCounter->display(QString("%1").arg(m_grid->mines, 3, 10, QLatin1Char('0'))); // TODO
     m_timeCounter->clearTimer();
+    connect(m_faceButton, &QPushButton::clicked, this, &MainWindow::reset);
+    connect(m_grid, &Field::flagged, this, &MainWindow::flagged);
 }
 
 void MainWindow::initializeLayouts()
 {
     m_headerLayout->setContentsMargins(5, 0, 5, 0);
-    m_gridLayout->setSpacing(0);
+    connect(m_grid, &Field::clicked, this, &MainWindow::buttonPressed);
 }
 
 void MainWindow::addWidgetsToLayouts()
@@ -83,45 +81,39 @@ void MainWindow::addWidgetsToLayouts()
     m_headerLayout->addWidget(m_timeCounter, 0, Qt::AlignRight);
 
     m_vLayout->addLayout(m_headerLayout);
-    m_vLayout->addLayout(m_gridLayout);
-}
-
-void MainWindow::createGrid()
-{
-    for (int i {0}; i < Square::ROWS; ++i) {
-        for (int j {0}; j < Square::COLS; ++j) {
-            auto square = new QPushButton;
-            initializeSquare(square);
-            m_gridLayout->addWidget(square, i, j);
-        }
-    }
-}
-
-void MainWindow::initializeSquare(QPushButton *square)
-{
-    square->setMinimumSize(Square::WIDTH, Square::HEIGHT);
-    square->setMaximumSize(square->maximumHeight() - 1, square->maximumWidth() - 1);
-    connect(square, &QPushButton::pressed, this, &MainWindow::buttonPressed);
-
-    resetSquare(square);
-}
-
-void MainWindow::resetSquare(QPushButton *square)
-{
-    square->setStyleSheet(Square::Style::NORMAL);
+    m_vLayout->addLayout(m_grid);
 }
 
 void MainWindow::initalizeCentralWidget()
 {
     m_centralWidget->setLayout(m_vLayout);
-    m_centralWidget->setStyleSheet(Central::STYLE);
+    m_centralWidget->setStyleSheet(CENTRAL_STYLE);
 }
 
 void MainWindow::buttonPressed()
 {
-    auto square = qobject_cast<QPushButton*>(sender());
-    square->setStyleSheet(Square::Style::PRESSED);
     m_timeCounter->startTimer();
-    int count = m_mineCounter->intValue() - 1;
+    disconnect(m_grid, &Field::clicked, this, &MainWindow::buttonPressed);
+}
+
+void MainWindow::flagged(bool isFlagged)
+{
+    int count = m_mineCounter->intValue() + (isFlagged ? -1 : 1);
     m_mineCounter->display(QString("%1").arg(count, 3, 10, QLatin1Char('0')));
+}
+
+void MainWindow::finish()
+{
+    m_timeCounter->stopTimer();
+    m_mineCounter->display("000");
+}
+
+void MainWindow::win()
+{
+    m_faceButton->setIcon(iconWon);
+}
+
+void MainWindow::lose()
+{
+    m_faceButton->setIcon(iconLost);
 }

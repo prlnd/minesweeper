@@ -1,0 +1,9 @@
+<RCC>
+    <qresource prefix="/images">
+        <file>Smiley.ico</file>
+        <file>Smiley1.ico</file>
+        <file>Smiley3.ico</file>
+        <file>Flag.ico</file>
+        <file>Mine.ico</file>
+    </qresource>
+</RCC>

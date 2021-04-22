@@ -1,7 +1,7 @@
 #include "lcdtimer.h"
 
 LCDTimer::LCDTimer(QWidget *parent, int nDigits)
-    : QLCDNumber(parent)
+    : CustomLCD(parent)
     , m_timer(new QTimer(this))
     , m_nDigits(nDigits)
     , m_maxCount(1)
