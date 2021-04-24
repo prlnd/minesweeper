@@ -1,16 +1,18 @@
-#ifndef FIELD_H
-#define FIELD_H
+#ifndef GRID_H
+#define GRID_H
 
 #include "cell.h"
 
 #include <QGridLayout>
 
-class Field : public QGridLayout
+class Grid : public QGridLayout
 {
     Q_OBJECT
 public:
-    Field(int row = 9, int col = 9, int mines = 10, QWidget *parent = nullptr);
-    QString print() const;
+    Grid(QWidget *parent = nullptr);
+    Grid(int row, int col, int mines, QWidget *parent = nullptr);
+    ~Grid();
+    void print() const;
     Cell *cellAt(int row, int col) const;
 
     const int rows;
@@ -49,4 +51,4 @@ signals:
     void flagged(bool);
 };
 
-#endif // FIELD_H
+#endif // GRID_H

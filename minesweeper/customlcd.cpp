@@ -7,5 +7,5 @@ CustomLCD::CustomLCD(QWidget *parent)
     setPalette(Qt::red);
     setSegmentStyle(QLCDNumber::Flat);
     setMinimumSize(WIDTH, HEIGHT);
-    setMaximumSize(WIDTH, HEIGHT);
+    setMaximumSize(maximumWidth() - 1, maximumHeight() - 1);
 }

@@ -11,7 +11,7 @@ CONFIG += c++11
 SOURCES += \
     cell.cpp \
     customlcd.cpp \
-    field.cpp \
+    grid.cpp \
     lcdtimer.cpp \
     main.cpp \
     mainwindow.cpp
@@ -19,11 +19,9 @@ SOURCES += \
 HEADERS += \
     cell.h \
     customlcd.h \
-    difficulty.h \
-    field.h \
+    grid.h \
     lcdtimer.h \
-    mainwindow.h \
-    status.h
+    mainwindow.h
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

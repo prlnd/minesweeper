@@ -1,5 +1,4 @@
 #include "mainwindow.h"
-#include "constants.h"
 
 #include <QApplication>
 

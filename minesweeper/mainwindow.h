@@ -2,8 +2,7 @@
 #define MAINWINDOW_H
 
 #include "lcdtimer.h"
-//#include "grid.h"
-#include "field.h"
+#include "grid.h"
 
 #include <QGridLayout>
 #include <QMainWindow>
@@ -25,7 +24,7 @@ private:
     QWidget *m_centralWidget;
     QVBoxLayout *m_vLayout;
     QHBoxLayout *m_headerLayout;
-    Field *m_grid;
+    Grid *m_grid;
     CustomLCD *m_mineCounter;
     LCDTimer *m_timeCounter;
     QPushButton *m_faceButton;

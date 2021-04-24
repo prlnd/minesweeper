@@ -14,8 +14,7 @@ Cell::Cell(int row, int col, QWidget *parent)
 {
     setMinimumSize(WIDTH, HEIGHT);
     setStyleSheet(NORMAL);
-    //    setMaximumSize(maximumHeight() - 1, maximumWidth() - 1);
-    //    connect(square, &QPushButton::pressed, this, &MainWindow::buttonPressed);
+    setMaximumSize(maximumHeight() - 1, maximumWidth() - 1);
 }
 
 void Cell::reveal()

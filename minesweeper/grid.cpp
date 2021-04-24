@@ -1,9 +1,15 @@
-#include "field.h"
+#include "grid.h"
 
 #include <QTextStream>
 #include <QDebug>
 
-Field::Field(int row, int col, int mines, QWidget *parent)
+Grid::Grid(QWidget *parent)
+    : Grid(9, 9, 10, parent)
+{
+
+}
+
+Grid::Grid(int row, int col, int mines, QWidget *parent)
     : QGridLayout(parent)
     , rows(row)
     , cols(col)
@@ -14,10 +20,19 @@ Field::Field(int row, int col, int mines, QWidget *parent)
     setSpacing(0);
     init();
     generateMines();
-    connect(this, &Field::over, this, &Field::finish);
+    connect(this, &Grid::over, this, &Grid::finish);
 }
 
-QString Field::print() const
+Grid::~Grid()
+{
+    QLayoutItem *item;
+    while ((item = takeAt(0))) {
+        delete item->widget();
+        delete item;
+    }
+}
+
+void Grid::print() const
 {
     QString buf;
     QTextStream ts {&buf};
@@ -37,33 +52,33 @@ QString Field::print() const
         }
         ts << '\n';
     }
-    return buf;
+    qDebug().noquote() << buf;
 }
 
-Cell *Field::cellAt(int row, int col) const
+Cell *Grid::cellAt(int row, int col) const
 {
     auto widget = itemAtPosition(row, col)->widget();
     return qobject_cast<Cell*>(widget);
 }
 
-void Field::init()
+void Grid::init()
 {
     for (int i = 0; i < rows; ++i) {
         for (int j = 0; j < cols; ++j) {
             auto cell {new Cell(i, j)};
-            connect(cell, &Cell::leftClicked, this, &Field::reveal);
-            connect(cell, &Cell::leftClicked, this, &Field::clicked);
-            connect(cell, &Cell::rightClicked, this, &Field::flag);
-            connect(cell, &Cell::rightClicked, this, &Field::clicked);
-            connect(cell, &Cell::flagged, this, &Field::flagged);
+            connect(cell, &Cell::leftClicked, this, &Grid::reveal);
+            connect(cell, &Cell::leftClicked, this, &Grid::clicked);
+            connect(cell, &Cell::rightClicked, this, &Grid::flag);
+            connect(cell, &Cell::rightClicked, this, &Grid::clicked);
+            connect(cell, &Cell::flagged, this, &Grid::flagged);
             addWidget(cell, i, j);
         }
     }
 
-//    qDebug().noquote() << print();
+//    print();
 }
 
-void Field::generateMines()
+void Grid::generateMines()
 {
     std::srand(time(nullptr));
 
@@ -75,10 +90,10 @@ void Field::generateMines()
         } while (cellAt(row, col)->isMine());
         setMine(row, col);
     }
-    qDebug().noquote() << print();
+    print();
 }
 
-void Field::setMine(int row, int col)
+void Grid::setMine(int row, int col)
 {
     for (auto &pos : adj) {
         int i = row + pos.first;
@@ -92,30 +107,30 @@ void Field::setMine(int row, int col)
     cellAt(row, col)->mineCount = -1;
 }
 
-bool Field::isValid(int row, int col) const
+bool Grid::isValid(int row, int col) const
 {
     return 0 <= row && row < rows
             && 0 <= col && col < cols;
 }
 
-void Field::reveal(int row, int col)
+void Grid::reveal(int row, int col)
 {
     if (status != Status::CONTINUES)
         return;
     auto cell {cellAt(row, col)};
-    if (cell->isFlagged)
+    if (cell->isFlagged || cell->isRevealed)
         return;
     cell->reveal();
-    if (--unrevealed == 0) {
-        qDebug() << "Win";
-        status = Status::WON;
-        emit won();
-        emit over();
-    } else if (cell->isMine()) {
-        qDebug() << "Lose";
-        status = Status::LOST;
-        emit over();
-        emit lost();
+    if (cell->isMine()) {
+            qDebug() << "Lose";
+            status = Status::LOST;
+            emit over();
+            emit lost();
+    } else if (--unrevealed == 0) {
+            qDebug() << "Win";
+            status = Status::WON;
+            emit won();
+            emit over();
     } else if (cell->isEmpty()) {
         for (auto &pos : adj) {
             int i = row + pos.first;
@@ -127,14 +142,14 @@ void Field::reveal(int row, int col)
     }
 }
 
-void Field::flag(int row, int col)
+void Grid::flag(int row, int col)
 {
     if (status == Status::CONTINUES) {
         cellAt(row, col)->flag();
     }
 }
 
-void Field::finish()
+void Grid::finish()
 {
     for (int i = 0; i < rows; ++i) {
         for (int j = 0; j < cols; ++j) {
